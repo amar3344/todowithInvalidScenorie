@@ -11,6 +11,12 @@ let statusArray = ["TO DO", "IN PROGRESS", "DONE"];
 let priorityArray = ["HIGH", "MEDIUM", "LOW"];
 let categoryArray = ["WORK", "HOME", "LEARNING"];
 let todosArray = ["priority", "status", "dueDate", "category", "todo"];
+var format = require("date-fns/format");
+var isValidDate = require("date-fns/isValid");
+const d = format(new Date(2014, 1, 11), "yyyy-dd-MM");
+const v = isValidDate(d);
+console.log(d);
+console.log(v);
 
 let dbPath = path.join(__dirname, "todoApplication.db");
 
