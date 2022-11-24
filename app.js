@@ -7,6 +7,10 @@ let app = express();
 app.use(express.json());
 let db = null;
 let isValid = false;
+let statusArray = ["TO DO", "IN PROGRESS", "DONE"];
+let priorityArray = ["HIGH", "MEDIUM", "LOW"];
+let categoryArray = ["WORK", "HOME", "LEARNING"];
+let todosArray = ["priority", "status", "dueDate", "category", "todo"];
 
 let dbPath = path.join(__dirname, "todoApplication.db");
 
@@ -128,24 +132,41 @@ app.get("/todos/", async (request, response) => {
       break;
   }
   const dbResponse = await db.all(todoQuery);
-  response.send(dbResponse);
+  response.send(
+    dbResponse.map((eachItem) => convertDbObjectTORequiredObject(eachItem))
+  );
 });
 
 //API-2
 app.post("/todos/", async (request, response) => {
   try {
     const { id, todo, priority, status, category, dueDate } = request.body;
-    const postQuery = `INSERT INTO todo (id,todo,priority,status,category,due_date)
-    VALUES (
-        ${id},
-        '${todo}',
-        '${priority}',
-        '${status}',
-        '${category}',
-        '${dueDate}');`;
-    const dbResponse = await db.run(postQuery);
-    console.log(dbResponse);
-    response.send("added Successfully");
+    if (priorityArray.includes(priority)) {
+      if (statusArray.includes(status)) {
+        if (categoryArray.includes(category)) {
+          const postQuery = `INSERT INTO todo (id,todo,priority,status,category,due_date)
+            VALUES (
+                ${id},
+                '${todo}',
+                '${priority}',
+                '${status}',
+                '${category}',
+                '${dueDate}');`;
+          const dbResponse = await db.run(postQuery);
+          //console.log(dbResponse);
+          response.send("Todo Successfully Added");
+        } else {
+          response.status(400);
+          response.send("Invalid Todo Category");
+        }
+      } else {
+        response.status(400);
+        response.send("Invalid Todo Status");
+      }
+    } else {
+      response.status(400);
+      response.send("Invalid Todo Priority");
+    }
   } catch (e) {
     console.log(`${e.message}`);
     process.exit(1);
@@ -172,37 +193,59 @@ app.put("/todos/:todoId/", async (request, response) => {
 
   switch (true) {
     case hasStatus(request.body):
-      putQuery = `UPDATE todo
+      if (statusArray.includes(status)) {
+        putQuery = `UPDATE todo
             SET status = '${status}'
             WHERE id=${todoId}
             ;`;
-      bdResponse = await db.run(putQuery);
-      response.send("Status Updated");
-      break;
+        bdResponse = await db.run(putQuery);
+        response.send("Status Updated");
+        break;
+      } else {
+        response.status(400);
+        response.send("Invalid Todo Status");
+        break;
+      }
+
     case hasPriority(request.body):
-      putQuery = `UPDATE todo
+      if (priorityArray.includes(priority)) {
+        putQuery = `UPDATE todo
         SET priority = '${priority}'
         WHERE id = ${todoId}
         ;`;
-      dbResponse = await db.run(putQuery);
-      response.send("Priority Updated");
-      break;
+        dbResponse = await db.run(putQuery);
+        response.send("Priority Updated");
+        break;
+      } else {
+        response.status(400);
+        response.send("Invalid Todo Priority");
+        break;
+      }
+
     case hasCategory(request.body):
-      putQuery = `UPDATE todo
+      if (categoryArray.includes(category)) {
+        putQuery = `UPDATE todo
          SET category = '${category}'
          WHERE id = ${todoId}
          ;`;
-      dbResponse = await db.run(putQuery);
-      response.send("Category Updated");
-      break;
+        dbResponse = await db.run(putQuery);
+        response.send("Category Updated");
+        break;
+      } else {
+        response.status(400);
+        response.send("Invalid Todo Category");
+        break;
+      }
     case hasDueDate(request.body):
+      console.log(request.body);
       putQuery = `UPDATE todo
-        SET due_date = ${due_date}
+        SET due_date = '${dueDate}'
         WHERE id = ${todoId};`;
       dbResponse = await db.run(putQuery);
       response.send("Due Date Updated");
       break;
     default:
+      console.log(todo);
       putQuery = `UPDATE todo 
         SET todo = '${todo}'
         WHERE id = ${todoId}
@@ -220,3 +263,5 @@ app.delete("/todos/:todoId/", async (request, response) => {
   const dbResponse = await db.run(todoQuery);
   response.send("Todo Deleted");
 });
+
+module.exports = app;
