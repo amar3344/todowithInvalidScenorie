@@ -13,10 +13,6 @@ let categoryArray = ["WORK", "HOME", "LEARNING"];
 let todosArray = ["priority", "status", "dueDate", "category", "todo"];
 var format = require("date-fns/format");
 var isValidDate = require("date-fns/isValid");
-const d = format(new Date(2014, 1, 11), "yyyy-dd-MM");
-const v = isValidDate(d);
-console.log(d);
-console.log(v);
 
 let dbPath = path.join(__dirname, "todoApplication.db");
 
@@ -73,7 +69,7 @@ const hasCategory = (dbObject) => {
 };
 
 const hasDueDate = (dbObject) => {
-  return dbObject.due_date !== undefined;
+  return dbObject.dueDate !== undefined;
 };
 
 //API - 1
@@ -147,6 +143,7 @@ app.get("/todos/", async (request, response) => {
 app.post("/todos/", async (request, response) => {
   try {
     const { id, todo, priority, status, category, dueDate } = request.body;
+    const d = format(new Date(dueDate), "yyyy-MM-dd");
     if (priorityArray.includes(priority)) {
       if (statusArray.includes(status)) {
         if (categoryArray.includes(category)) {
@@ -157,7 +154,7 @@ app.post("/todos/", async (request, response) => {
                 '${priority}',
                 '${status}',
                 '${category}',
-                '${dueDate}');`;
+                '${d}');`;
           const dbResponse = await db.run(postQuery);
           //console.log(dbResponse);
           response.send("Todo Successfully Added");
@@ -179,7 +176,7 @@ app.post("/todos/", async (request, response) => {
   }
 });
 
-//API-2
+//API-4
 app.get("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
   const todoQuery = `SELECT * FROM todo 
@@ -196,6 +193,10 @@ app.put("/todos/:todoId/", async (request, response) => {
   //console.log(dueDate);
   let dbResponse = null;
   let putQuery = null;
+  const d = format(new Date(dueDate), "yyyy-MM-dd");
+  const v = isValidDate(d);
+  console.log(d);
+  console.log(v);
 
   switch (true) {
     case hasStatus(request.body):
@@ -243,9 +244,10 @@ app.put("/todos/:todoId/", async (request, response) => {
         break;
       }
     case hasDueDate(request.body):
-      console.log(request.body);
+      const newDate = format(new Date(dueDate), "yyyy-MM-dd");
+      //console.log(newDate);
       putQuery = `UPDATE todo
-        SET due_date = '${dueDate}'
+        SET due_date = '${newDate}'
         WHERE id = ${todoId};`;
       dbResponse = await db.run(putQuery);
       response.send("Due Date Updated");

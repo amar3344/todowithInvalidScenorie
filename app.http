@@ -23,7 +23,7 @@ PUT http://localhost:3000/todos/4/
 Content-Type: application/json
 
 {
-      "status" : "AVERAGE"
+      "dueDate" : "10-1-2022"
 }
 
 ###
